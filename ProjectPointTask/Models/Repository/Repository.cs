@@ -3,60 +3,158 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Security.Principal;
 using System.Web;
 
 namespace ProjectPointTask.Models
 {
-    public class Repository<T> : IRepository<T> where T : EntityBase 
+    public abstract class Repository<T> : IRepository<T> where T : EntityBase
     {
 
-        private readonly ApplicationDbContext Db;
-        public DbSet<T> DbSet;
+        protected readonly ApplicationDbContext Db;
+        protected DbSet<T> DbSet;
+        protected string userName;
+        protected string id_usuario;
+        protected string id_companhia;
+        protected Usuario user;
 
         public Repository()
         {
             Db = new ApplicationDbContext();
             DbSet = Db.Set<T>();
+            userName = HttpContext.Current.User.Identity.Name;
+            user = Db.Set<Usuario>().SingleOrDefault(u => u.UserName == userName);
+            id_usuario = user.Id;
+            id_companhia = user.Id_Companhia;
+
         }
 
-        public T Atualizar(T obj)
+        public virtual T Atualizar(T obj)
         {
-            throw new NotImplementedException();
+
+            var entry = Db.Entry(obj);
+            entry.State = EntityState.Modified;
+            var objAtualizado = DbSet.Add(obj);
+
+            Save();
+
+            return objAtualizado;
+
         }
 
-        public T Criar(T obj)
+        public virtual T Criar(T obj)
         {
-            throw new NotImplementedException();
+            var objCriado = DbSet.Add(obj);
+
+            Save();
+
+            return objCriado;
+
         }
 
-        public T Deletar(T obj)
+        public virtual T Deletar(T obj)
         {
-            throw new NotImplementedException();
+            obj.Ativo = false;
+            obj.DeletadoEm = DateTime.Now;
+            obj.Deletado = true;
+            obj.DeletadoPor = HttpContext.Current.User.Identity.Name;
+
+            var entry = Db.Entry(obj);
+            entry.State = EntityState.Modified;
+
+            var objDeletado = DbSet.Add(obj);
+            return objDeletado;
         }
 
-        public T TrazerPorId(Guid Id)
+        public virtual T TrazerPorId(Guid Id)
         {
-            throw new NotImplementedException();
+            if (user.ECompanhia)
+            {
+                return (from objetos in DbSet.Where(obj => obj.Id == Id)
+                        join usuarios in Db.Set<Usuario>().Where(u => u.Id_Companhia == id_usuario)
+                        on objetos.CriadoPor equals usuarios.UserName
+                        select objetos)
+                        .SingleOrDefault();
+
+
+            }
+            else
+            {
+                return DbSet.SingleOrDefault(obj => obj.Id == Id && obj.CriadoPor == userName);
+            }
+
         }
 
-        public IEnumerable<T> TrazerTodos()
+        public virtual IEnumerable<T> TrazerTodos()
         {
-            throw new NotImplementedException();
+            if (user.ECompanhia)
+            {
+                return from objetos in DbSet
+                       join usuario in Db.Set<Usuario>().Where(u => u.Id_Companhia == id_usuario)
+                       on objetos.CriadoPor equals usuario.UserName
+                       select objetos;
+            }
+            else
+            {
+                return DbSet.Where(obj => obj.CriadoPor == userName);
+            }
+
         }
 
-        public IEnumerable<T> TrazerTodosAtivos()
+        public virtual IEnumerable<T> TrazerTodosAtivos()
         {
-            throw new NotImplementedException();
+            if (user.ECompanhia)
+            {
+                return from objetos in DbSet.Where(obj => obj.Ativo == true)
+                       join usuarios in Db.Set<Usuario>().Where(u => u.Id_Companhia == id_usuario)
+                       on objetos.CriadoPor equals usuarios.UserName
+                       select objetos;
+            }
+            else
+            {
+                return DbSet.Where(obj => obj.Ativo == true && obj.CriadoPor == userName);
+            }
         }
 
-        public IEnumerable<T> TrazerTodosDeletados()
+        public virtual IEnumerable<T> TrazerTodosDeletados()
         {
-            throw new NotImplementedException();
+            if (user.ECompanhia)
+            {
+                return from objetos in DbSet.Where(obj => obj.Deletado == true)
+                       join usuarios in Db.Set<Usuario>().Where(u => u.Id_Companhia == id_usuario)
+                       on objetos.CriadoPor equals usuarios.UserName
+                       select objetos;
+            }
+            else
+            {
+                return DbSet.Where(obj => obj.Deletado == true && obj.CriadoPor == userName);
+            }
         }
 
-        public IEnumerable<T> TrazerTodosInativos()
+        public virtual IEnumerable<T> TrazerTodosInativos()
         {
-            throw new NotImplementedException();
+            if (user.ECompanhia)
+            {
+                return from objetos in DbSet.Where(obj => obj.Ativo == true)
+                       join usuarios in Db.Set<Usuario>().Where(u => u.Id_Companhia == id_usuario)
+                       on objetos.CriadoPor equals usuarios.UserName
+                       select objetos;
+            }
+            else
+            {
+                return DbSet.Where(obj => obj.Ativo == false && obj.CriadoPor == userName);
+            }
+        }
+
+        public virtual int Save()
+        {
+           return Db.SaveChanges();
+        }
+
+        public void Dispose()
+        {
+            Db.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

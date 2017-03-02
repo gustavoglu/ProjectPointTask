@@ -48,6 +48,18 @@ namespace ProjectPointTask.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
+
+        [MaxLength(100)]
+        [Display(Name = "Nome")]
+        public string Nome { get; set; }
+
+        [MaxLength(100)]
+        [Display(Name = "Sobrenome")]
+        public string SobreNome { get; set; }
+
+        [Display(Name = "Companhia")]
+        public bool ECompanhia { get; set; }
+
     }
 
     public class RegisterExternalBindingModel

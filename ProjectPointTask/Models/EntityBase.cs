@@ -5,7 +5,7 @@ using System.Web;
 
 namespace ProjectPointTask.Models
 {
-    public class EntityBase
+    public abstract class EntityBase
     {
         public EntityBase()
         {
@@ -14,17 +14,17 @@ namespace ProjectPointTask.Models
 
         public Guid Id { get; set; }
 
-        public DateTime CriadoEm { get; set; }
+        public DateTime? CriadoEm { get; set; }
 
-        public DateTime DeletadoEm { get; set; }
+        public DateTime? DeletadoEm { get; set; }
 
-        public string CriadoPor { get; set; }
+        public string CriadoPor { get; set; } = "";
 
-        public string DeletadoPor { get; set; }
+        public string DeletadoPor { get; set; } = "";
 
-        public bool Deletado { get; set; }
+        public bool? Deletado { get; set; }
 
-        public bool Ativo { get; set; }
+        public bool? Ativo { get; set; }
 
     }
 }

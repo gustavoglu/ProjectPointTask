@@ -5,7 +5,7 @@ using System.Web;
 
 namespace ProjectPointTask.Models.Interfaces
 {
-    public interface IRepository<T>
+    public interface IRepository<T> : IDisposable
     {
         T Criar(T obj);
 

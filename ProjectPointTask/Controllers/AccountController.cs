@@ -328,7 +328,7 @@ namespace ProjectPointTask.Controllers
                 return BadRequest(ModelState);
             }
 
-            var user = new Usuario() { UserName = model.Email, Email = model.Email };
+            var user = new Usuario() { UserName = model.Email, Email = model.Email , ECompanhia = model.ECompanhia, Nome = model.Nome , Sobrenome = model.SobreNome};
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
 
